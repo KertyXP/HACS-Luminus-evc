@@ -1,0 +1,53 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connexion à Luminus EVC",
+        "description": "Entrez vos identifiants du portail Luminus EVC et l'identifiant de borne de recharge (Recharge Spot ID).",
+        "data": {
+          "username": "E-mail / Nom d'utilisateur",
+          "password": "Mot de passe",
+          "spot_id": "ID de la borne (Recharge Spot ID)",
+          "scan_interval": "Intervalle d'actualisation (secondes)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Échec de connexion au portail Luminus EVC.",
+      "invalid_auth": "E-mail ou mot de passe incorrect.",
+      "unknown": "Une erreur inattendue est survenue."
+    },
+    "abort": {
+      "already_configured": "Cette borne Luminus est déjà configurée."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options Luminus EVC",
+        "data": {
+          "scan_interval": "Intervalle d'actualisation (secondes)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "mom_power_kw": { "name": "Puissance instantanée" },
+      "session_energy_kwh": { "name": "Énergie de la session" },
+      "total_consumption_kwh": { "name": "Consommation totale" },
+      "past_consumption_kwh": { "name": "Consommation passée" },
+      "soc": { "name": "Niveau de batterie (SOC)" },
+      "status_text": { "name": "Statut" },
+      "notification": { "name": "Notification" },
+      "transaction_time": { "name": "Durée de la session" },
+      "card_id": { "name": "Badge RFID" },
+      "customer_name": { "name": "Utilisateur" },
+      "connector": { "name": "Connecteur" }
+    },
+    "binary_sensor": {
+      "is_charging": { "name": "En charge" },
+      "is_plugged": { "name": "Véhicule branché" }
+    }
+  }
+}

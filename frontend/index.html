@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Luminus EVC Card - Preview & Test Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f17;
+      --panel-bg: rgba(19, 24, 37, 0.85);
+      --border: rgba(255, 255, 255, 0.08);
+      --accent: #10b981;
+      --text: #f8fafc;
+      --subtext: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(at 10% 20%, rgba(16, 185, 129, 0.12) 0px, transparent 50%),
+        radial-gradient(at 90% 80%, rgba(6, 182, 212, 0.10) 0px, transparent 50%);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #10b981, #06b6d4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+
+    header p {
+      color: var(--subtext);
+      font-size: 0.9rem;
+    }
+
+    .studio-layout {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 30px;
+      width: 100%;
+      max-width: 1000px;
+    }
+
+    .card-preview-column {
+      flex: 1;
+      min-width: 340px;
+      max-width: 460px;
+    }
+
+    .controls-column {
+      flex: 1;
+      min-width: 320px;
+      max-width: 440px;
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .controls-column h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .quick-presets {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    button.preset-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    button.preset-btn:hover {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #10b981;
+    }
+
+    button.preset-btn.active {
+      background: #10b981;
+      color: #0b0f17;
+      border-color: #10b981;
+    }
+
+    .control-group {
+      margin-bottom: 16px;
+    }
+
+    .control-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--subtext);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .control-label span.val {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #10b981;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+    }
+
+    select, input[type="text"] {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.85rem;
+      outline: none;
+    }
+
+    .status-alert {
+      margin-top: 18px;
+      padding: 10px 14px;
+      background: rgba(16, 185, 129, 0.1);
+      border-left: 3px solid #10b981;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      color: #a7f3d0;
+      line-height: 1.4;
+    }
+  </style>
+  <script src="./luminus-evc-card.js"></script>
+</head>
+<body>
+
+  <header>
+    <h1>Luminus EVC Card Studio</h1>
+    <p>Simulateur et prévisualisation directe du widget Home Assistant</p>
+  </header>
+
+  <div class="studio-layout">
+    <!-- Live Card Column -->
+    <div class="card-preview-column">
+      <luminus-evc-card id="previewCard"></luminus-evc-card>
+    </div>
+
+    <!-- Controls Column -->
+    <div class="controls-column">
+      <h3>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="#10b981"><path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/></svg>
+        Simulateur d'états
+      </h3>
+
+      <!-- Presets -->
+      <div class="quick-presets">
+        <button class="preset-btn active" onclick="applyPreset('ready')">🟢 Prêt (Veille)</button>
+        <button class="preset-btn" onclick="applyPreset('plugged')">🔵 Branché (Attente)</button>
+        <button class="preset-btn" onclick="applyPreset('charging_low')">⚡ Charge 3.7 kW</button>
+        <button class="preset-btn" onclick="applyPreset('charging_high')">⚡ Charge Rapide 11 kW</button>
+      </div>
+
+      <!-- Power slider -->
+      <div class="control-group">
+        <div class="control-label">
+          <span>Puissance Instantanée</span>
+          <span class="val" id="lblPower">0.0 kW</span>
+        </div>
+        <input type="range" id="rngPower" min="0" max="11" step="0.1" value="0" oninput="updateState()">
+      </div>
+
+      <!-- Energy slider -->
+      <div class="control-group">
+        <div class="control-label">
+          <span>Énergie Session</span>
+          <span class="val" id="lblEnergy">0.0 kWh</span>
+        </div>
+        <input type="range" id="rngEnergy" min="0" max="80" step="0.5" value="0" oninput="updateState()">
+      </div>
+
+      <!-- Total Consumption slider -->
+      <div class="control-group">
+        <div class="control-label">
+          <span>Consommation Totale</span>
+          <span class="val" id="lblTotal">6054 kWh</span>
+        </div>
+        <input type="range" id="rngTotal" min="5000" max="10000" step="10" value="6054" oninput="updateState()">
+      </div>
+
+      <!-- SOC slider -->
+      <div class="control-group">
+        <div class="control-label">
+          <span>Batterie Véhicule (SOC)</span>
+          <span class="val" id="lblSoc">Désactivé (Null)</span>
+        </div>
+        <input type="range" id="rngSoc" min="0" max="100" step="1" value="0" oninput="updateState()">
+      </div>
+
+      <!-- Status text -->
+      <div class="control-group">
+        <div class="control-label">
+          <span>Texte Statut</span>
+        </div>
+        <input type="text" id="txtStatus" value="Prêt" oninput="updateState()">
+      </div>
+
+      <div class="status-alert">
+        <strong>Compatibilité HACS :</strong> Ce widget lit directement les sensors créés par l'intégration <code>luminus_evc</code> (puissance, énergie, total, statut, durée).
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const card = document.getElementById('previewCard');
+
+    // Initial card configuration
+    card.setConfig({
+      title: "Borne Luminus EVC",
+      spot_id: "1234606393"
+    });
+
+    // Mock Home Assistant states object
+    let mockHass = {
+      states: {
+        "sensor.luminus_instant_power": { state: "0.0" },
+        "sensor.luminus_session_energy": { state: "0.00" },
+        "sensor.luminus_total_consumption": { state: "6054.0" },
+        "sensor.luminus_status": { state: "Prêt" },
+        "sensor.luminus_session_duration": { state: "00:00" },
+        "sensor.luminus_battery_state_of_charge": { state: "unknown" },
+        "binary_sensor.luminus_wallbox_charging": { state: "off" },
+        "binary_sensor.luminus_wallbox_vehicle_connected": { state: "off" },
+        "sensor.luminus_rfid_card": { state: "Prêt" },
+        "sensor.luminus_connector": { state: "IEC-62196-T2" }
+      }
+    };
+
+    function updateState() {
+      const power = parseFloat(document.getElementById('rngPower').value);
+      const energy = parseFloat(document.getElementById('rngEnergy').value);
+      const total = parseFloat(document.getElementById('rngTotal').value);
+      const soc = parseInt(document.getElementById('rngSoc').value);
+      const status = document.getElementById('txtStatus').value;
+
+      document.getElementById('lblPower').textContent = `${power.toFixed(1)} kW`;
+      document.getElementById('lblEnergy').textContent = `${energy.toFixed(1)} kWh`;
+      document.getElementById('lblTotal').textContent = `${total} kWh`;
+      document.getElementById('lblSoc').textContent = soc > 0 ? `${soc}%` : "Désactivé (Null)";
+
+      const isCharging = power > 0.05;
+      const isPlugged = isCharging || status.toLowerCase().includes("branch") || status.toLowerCase().includes("connect");
+
+      mockHass.states["sensor.luminus_instant_power"].state = power.toString();
+      mockHass.states["sensor.luminus_session_energy"].state = energy.toString();
+      mockHass.states["sensor.luminus_total_consumption"].state = total.toString();
+      mockHass.states["sensor.luminus_status"].state = status;
+      mockHass.states["binary_sensor.luminus_wallbox_charging"].state = isCharging ? "on" : "off";
+      mockHass.states["binary_sensor.luminus_wallbox_vehicle_connected"].state = isPlugged ? "on" : "off";
+      mockHass.states["sensor.luminus_battery_state_of_charge"].state = soc > 0 ? soc.toString() : "unknown";
+
+      if (isCharging) {
+        mockHass.states["sensor.luminus_session_duration"].state = "01:42";
+        mockHass.states["sensor.luminus_rfid_card"].state = "Badge Simon (04840...)";
+      } else {
+        mockHass.states["sensor.luminus_session_duration"].state = "00:00";
+        mockHass.states["sensor.luminus_rfid_card"].state = "Prêt";
+      }
+
+      card.hass = { ...mockHass };
+    }
+
+    function applyPreset(preset) {
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+
+      if (preset === 'ready') {
+        document.getElementById('rngPower').value = 0;
+        document.getElementById('rngEnergy').value = 0;
+        document.getElementById('rngSoc').value = 0;
+        document.getElementById('txtStatus').value = "Prêt";
+      } else if (preset === 'plugged') {
+        document.getElementById('rngPower').value = 0;
+        document.getElementById('rngEnergy').value = 0;
+        document.getElementById('rngSoc').value = 45;
+        document.getElementById('txtStatus').value = "Branché";
+      } else if (preset === 'charging_low') {
+        document.getElementById('rngPower').value = 3.7;
+        document.getElementById('rngEnergy').value = 8.4;
+        document.getElementById('rngSoc').value = 62;
+        document.getElementById('txtStatus').value = "En charge";
+      } else if (preset === 'charging_high') {
+        document.getElementById('rngPower').value = 11.0;
+        document.getElementById('rngEnergy').value = 24.5;
+        document.getElementById('rngSoc').value = 85;
+        document.getElementById('txtStatus').value = "En charge (Rapide)";
+      }
+      updateState();
+    }
+
+    // Initial render
+    card.hass = mockHass;
+  </script>
+</body>
+</html>

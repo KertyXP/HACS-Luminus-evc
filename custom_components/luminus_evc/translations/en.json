@@ -1,0 +1,53 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Luminus EVC",
+        "description": "Enter your Luminus EV portal credentials and Wallbox Recharge Spot ID.",
+        "data": {
+          "username": "Email / Username",
+          "password": "Password",
+          "spot_id": "Recharge Spot ID",
+          "scan_interval": "Update Interval (seconds)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to Luminus EVC portal.",
+      "invalid_auth": "Invalid email or password.",
+      "unknown": "Unexpected error occurred."
+    },
+    "abort": {
+      "already_configured": "This Luminus wallbox is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Luminus EVC Options",
+        "data": {
+          "scan_interval": "Update Interval (seconds)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "mom_power_kw": { "name": "Instant Power" },
+      "session_energy_kwh": { "name": "Session Energy" },
+      "total_consumption_kwh": { "name": "Total Consumption" },
+      "past_consumption_kwh": { "name": "Past Consumption" },
+      "soc": { "name": "Battery State of Charge" },
+      "status_text": { "name": "Status" },
+      "notification": { "name": "Notification" },
+      "transaction_time": { "name": "Session Duration" },
+      "card_id": { "name": "RFID Card" },
+      "customer_name": { "name": "User Name" },
+      "connector": { "name": "Connector" }
+    },
+    "binary_sensor": {
+      "is_charging": { "name": "Charging" },
+      "is_plugged": { "name": "Vehicle Connected" }
+    }
+  }
+}

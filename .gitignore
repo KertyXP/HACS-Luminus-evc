@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+tools/
+.venv/
+env/
+
+# IDE & Windows
+.vs/
+.vscode/
+bin/
+obj/
+*.user
+Thumbs.db
+Desktop.ini
