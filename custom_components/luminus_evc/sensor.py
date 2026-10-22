@@ -12,7 +12,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfPower
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfElectricCurrent,
+    UnitOfEnergy,
+    UnitOfPower,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -30,6 +36,7 @@ class LuminusSensorEntityDescription(SensorEntityDescription):
 
 
 SENSOR_TYPES: tuple[LuminusSensorEntityDescription, ...] = (
+    # ================= Primary User Dashboard Sensors =================
     LuminusSensorEntityDescription(
         key="mom_power_kw",
         name="Instant Power",
@@ -38,6 +45,15 @@ SENSOR_TYPES: tuple[LuminusSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
         value_fn=lambda data: data.get("mom_power_kw", 0.0),
+    ),
+    LuminusSensorEntityDescription(
+        key="current_amps",
+        name="Charging Current",
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.get("current_amps", 0.0),
     ),
     LuminusSensorEntityDescription(
         key="session_energy_kwh",
@@ -56,16 +72,6 @@ SENSOR_TYPES: tuple[LuminusSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
         value_fn=lambda data: data.get("total_consumption_kwh", 0.0),
-    ),
-    LuminusSensorEntityDescription(
-        key="past_consumption_kwh",
-        name="Past Consumption",
-        device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_registry_enabled_default=False,
-        suggested_display_precision=2,
-        value_fn=lambda data: data.get("past_consumption_kwh", 0.0),
     ),
     LuminusSensorEntityDescription(
         key="soc",
@@ -87,29 +93,68 @@ SENSOR_TYPES: tuple[LuminusSensorEntityDescription, ...] = (
         icon="mdi:message-badge-outline",
         value_fn=lambda data: data.get("notification", ""),
     ),
+
+    # ================= Diagnostic Category Sensors =================
+    LuminusSensorEntityDescription(
+        key="past_consumption_kwh",
+        name="Past Consumption",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+        value_fn=lambda data: data.get("past_consumption_kwh", 0.0),
+    ),
     LuminusSensorEntityDescription(
         key="transaction_time",
         name="Session Duration",
+        entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:timer-outline",
         value_fn=lambda data: data.get("transaction_time") or "00:00",
     ),
     LuminusSensorEntityDescription(
         key="card_id",
         name="RFID Card",
+        entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:smart-card-outline",
         value_fn=lambda data: data.get("card_id") or "None",
     ),
     LuminusSensorEntityDescription(
         key="customer_name",
         name="User Name",
+        entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:account",
         value_fn=lambda data: data.get("customer_name") or "None",
     ),
     LuminusSensorEntityDescription(
         key="connector",
         name="Connector",
+        entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:power-plug",
         value_fn=lambda data: data.get("connector", "Type 2"),
+    ),
+    LuminusSensorEntityDescription(
+        key="channel",
+        name="Channel",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:numeric",
+        value_fn=lambda data: data.get("channel", "1"),
+    ),
+    LuminusSensorEntityDescription(
+        key="status_code",
+        name="Status Code",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:code-tags",
+        value_fn=lambda data: data.get("status_code", "0"),
+    ),
+    LuminusSensorEntityDescription(
+        key="occupancy_ready_pct",
+        name="Availability Rate",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:chart-arc",
+        suggested_display_precision=1,
+        value_fn=lambda data: data.get("occupancy_ready_pct", 0.0),
     ),
 )
 
@@ -151,7 +196,11 @@ class LuminusSensor(CoordinatorEntity[LuminusDataUpdateCoordinator], SensorEntit
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this wallbox."""
-        connector = self.coordinator.data.get("connector", "Type 2") if self.coordinator.data else "Type 2"
+        connector = (
+            self.coordinator.data.get("connector", "Type 2")
+            if self.coordinator.data
+            else "Type 2"
+        )
         return DeviceInfo(
             identifiers={(DOMAIN, self._spot_id)},
             name=f"Luminus Wallbox {self._spot_id}",
@@ -166,3 +215,17 @@ class LuminusSensor(CoordinatorEntity[LuminusDataUpdateCoordinator], SensorEntit
         if not self.coordinator.data:
             return None
         return self.entity_description.value_fn(self.coordinator.data)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return 24h history attributes for instant power."""
+        if not self.coordinator.data:
+            return None
+
+        if self.entity_description.key == "mom_power_kw":
+            return {
+                "history_labels": self.coordinator.data.get("history_labels", []),
+                "history_kw": self.coordinator.data.get("history_kw", []),
+            }
+
+        return None

@@ -8,7 +8,10 @@ from typing import Any
 
 import aiohttp
 
-from .const import AJAX_URL, BASE_URL, LOGIN_URL, STATUS_MAP
+try:
+    from .const import AJAX_URL, BASE_URL, LOGIN_URL, STATUS_MAP
+except (ImportError, ValueError):
+    from const import AJAX_URL, BASE_URL, LOGIN_URL, STATUS_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -193,14 +196,35 @@ class LuminusApiClient:
         past_consumption_kwh = 0.0
         past_consumption_raw = ""
         past_consumption_unit = "kWh"
-        if isinstance(dash_data, list) and len(dash_data) >= 3 and isinstance(dash_data[2], dict):
-            usage_obj = dash_data[2]
-            past_consumption_raw = str(usage_obj.get("number", "0"))
-            past_consumption_unit = str(usage_obj.get("unit", "kWh"))
-            past_consumption_kwh = self._parse_kwh(past_consumption_raw, past_consumption_unit)
+        history_labels: list[str] = []
+        history_kw: list[float] = []
+        occupancy_ready_pct = 0.0
+
+        if isinstance(dash_data, list) and len(dash_data) >= 3:
+            # 0: Occupancy breakdown
+            if isinstance(dash_data[0], list) and len(dash_data[0]) > 0:
+                try:
+                    occupancy_ready_pct = round(float(dash_data[0][0]) * 100.0, 1)
+                except (ValueError, TypeError):
+                    pass
+
+            # 1: 24h usage curve (labels and 15-minute kW datasets)
+            if isinstance(dash_data[1], dict):
+                history_labels = dash_data[1].get("labels", [])
+                datasets = dash_data[1].get("datasets", {})
+                if isinstance(datasets, dict) and "1" in datasets:
+                    raw_vals = datasets["1"].get("values", [])
+                    history_kw = [self._to_float(v, 0.0) for v in raw_vals]
+
+            # 2: Total usage
+            if isinstance(dash_data[2], dict):
+                usage_obj = dash_data[2]
+                past_consumption_raw = str(usage_obj.get("number", "0"))
+                past_consumption_unit = str(usage_obj.get("unit", "kWh"))
+                past_consumption_kwh = self._parse_kwh(past_consumption_raw, past_consumption_unit)
 
         # Overview properties
-        channel = overview_item.get("CHANNEL", "1")
+        channel = str(overview_item.get("CHANNEL", "1"))
         connector = overview_item.get("CONNECTOR", "Type 2")
         mom_power_kw = self._to_float(overview_item.get("MOM_POWER_KW"), default=0.0)
         soc = self._to_float_or_none(overview_item.get("SOC"))
@@ -223,11 +247,15 @@ class LuminusApiClient:
         is_plugged = status_code in ("1", "2", "3") or bool(notification and "prêt" not in notification.lower() and status_code != "0")
         total_consumption_kwh = round(past_consumption_kwh + session_energy_kwh, 2)
 
+        # Estimated charging current (Amps at 230V reference)
+        current_amps = round((mom_power_kw * 1000.0) / 230.0, 1) if mom_power_kw > 0 else 0.0
+
         return {
             "spot_id": self._spot_id,
             "channel": channel,
             "connector": connector,
             "mom_power_kw": mom_power_kw,
+            "current_amps": current_amps,
             "soc": soc,
             "session_energy_kwh": session_energy_kwh,
             "transaction_time": transaction_time,
@@ -241,10 +269,39 @@ class LuminusApiClient:
             "icon": icon,
             "is_charging": is_charging,
             "is_plugged": is_plugged,
+            "occupancy_ready_pct": occupancy_ready_pct,
             "past_consumption_kwh": past_consumption_kwh,
             "past_consumption_unit": past_consumption_unit,
             "total_consumption_kwh": total_consumption_kwh,
+            "history_labels": history_labels,
+            "history_kw": history_kw,
+            "cloud_connected": True,
         }
+
+    async def async_execute_action(self, action_name: str) -> bool:
+        """Execute a remote action on the recharge spot (e.g. SoftReset, GetStatus)."""
+        session = await self._get_session()
+        if not self._logged_in:
+            await self.async_login()
+
+        action_req = {
+            "0": {
+                "handler": "\\LMS\\EV\\AsyncServices\\RechargeSpotsAsyncService",
+                "method": "action",
+                "params": {
+                    "rechargeSpotId": self._spot_id,
+                    "action": action_name,
+                },
+            }
+        }
+        url = f"{AJAX_URL}?requests={urllib.parse.quote(json.dumps(action_req))}"
+        try:
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=15)) as resp:
+                _LOGGER.info("Action %s returned status %s", action_name, resp.status)
+                return resp.status == 200
+        except Exception as err:
+            _LOGGER.error("Failed to execute action %s: %s", action_name, err)
+            return False
 
     @staticmethod
     def _parse_kwh(number_str: str, unit: str) -> float:

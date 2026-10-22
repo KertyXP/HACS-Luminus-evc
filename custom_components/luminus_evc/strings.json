@@ -34,6 +34,7 @@
   "entity": {
     "sensor": {
       "mom_power_kw": { "name": "Instant Power" },
+      "current_amps": { "name": "Charging Current" },
       "session_energy_kwh": { "name": "Session Energy" },
       "total_consumption_kwh": { "name": "Total Consumption" },
       "past_consumption_kwh": { "name": "Past Consumption" },
@@ -43,11 +44,19 @@
       "transaction_time": { "name": "Session Duration" },
       "card_id": { "name": "RFID Card" },
       "customer_name": { "name": "User Name" },
-      "connector": { "name": "Connector" }
+      "connector": { "name": "Connector" },
+      "channel": { "name": "Channel" },
+      "status_code": { "name": "Status Code" },
+      "occupancy_ready_pct": { "name": "Availability Rate" }
     },
     "binary_sensor": {
       "is_charging": { "name": "Charging" },
-      "is_plugged": { "name": "Vehicle Connected" }
+      "is_plugged": { "name": "Vehicle Connected" },
+      "cloud_connected": { "name": "Cloud API Connected" }
+    },
+    "button": {
+      "force_refresh": { "name": "Force Refresh" },
+      "reboot": { "name": "Restart Wallbox" }
     }
   }
 }

@@ -11,6 +11,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -28,6 +29,7 @@ class LuminusBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 
 BINARY_SENSOR_TYPES: tuple[LuminusBinarySensorEntityDescription, ...] = (
+    # Primary user binary sensors
     LuminusBinarySensorEntityDescription(
         key="is_charging",
         name="Charging",
@@ -39,6 +41,15 @@ BINARY_SENSOR_TYPES: tuple[LuminusBinarySensorEntityDescription, ...] = (
         name="Vehicle Connected",
         device_class=BinarySensorDeviceClass.PLUG,
         value_fn=lambda data: bool(data.get("is_plugged", False)),
+    ),
+
+    # Diagnostic binary sensors
+    LuminusBinarySensorEntityDescription(
+        key="cloud_connected",
+        name="Cloud API Connected",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        value_fn=lambda data: bool(data.get("cloud_connected", True)),
     ),
 )
 

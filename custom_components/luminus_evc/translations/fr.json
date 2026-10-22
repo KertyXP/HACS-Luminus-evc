@@ -34,6 +34,7 @@
   "entity": {
     "sensor": {
       "mom_power_kw": { "name": "Puissance instantanée" },
+      "current_amps": { "name": "Courant de charge" },
       "session_energy_kwh": { "name": "Énergie de la session" },
       "total_consumption_kwh": { "name": "Consommation totale" },
       "past_consumption_kwh": { "name": "Consommation passée" },
@@ -43,11 +44,19 @@
       "transaction_time": { "name": "Durée de la session" },
       "card_id": { "name": "Badge RFID" },
       "customer_name": { "name": "Utilisateur" },
-      "connector": { "name": "Connecteur" }
+      "connector": { "name": "Connecteur" },
+      "channel": { "name": "Canal" },
+      "status_code": { "name": "Code statut" },
+      "occupancy_ready_pct": { "name": "Taux de disponibilité" }
     },
     "binary_sensor": {
       "is_charging": { "name": "En charge" },
-      "is_plugged": { "name": "Véhicule branché" }
+      "is_plugged": { "name": "Véhicule branché" },
+      "cloud_connected": { "name": "API Cloud Connectée" }
+    },
+    "button": {
+      "force_refresh": { "name": "Actualiser maintenant" },
+      "reboot": { "name": "Redémarrer la borne" }
     }
   }
 }
